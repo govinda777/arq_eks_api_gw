@@ -108,6 +108,47 @@ https://github.com/kubecost/cost-analyzer-helm-chart
 - EVIDÊNCIAS DO PRJETO.
 https://github.com/marcosouzatech/desafio/blob/main/img/
 
+## Como Rodar o Projeto Localmente
+
+### Pré-requisitos
+- Go 1.20 ou superior
+- MySQL
+- Docker (opcional)
+
+### Configuração do Ambiente
+1. Clone o repositório.
+2. Navegue até a pasta `desafio_api/`.
+3. Copie o arquivo de exemplo de variáveis de ambiente:
+   ```bash
+   cp .env.example .env
+   ```
+4. Edite o arquivo `.env` com as suas credenciais do banco de dados.
+
+### Execução
+#### Via Go Local:
+```bash
+cd desafio_api/
+go run main.go
+```
+
+#### Via Docker:
+```bash
+docker build -t desafio-api .
+docker run -p 9000:9000 --env-file desafio_api/.env desafio-api
+```
+
+### Variáveis de Ambiente
+| Variável | Descrição | Valor Padrão |
+|----------|-----------|--------------|
+| `API_PORT` | Porta em que a API irá escutar | `9000` |
+| `DB_USUARIO` | Usuário do banco de dados | - |
+| `DB_SENHA` | Senha do banco de dados | - |
+| `DB_URL` | Host do banco de dados | `localhost` |
+| `DB_PORT` | Porta do banco de dados | `3306` |
+| `DB_NOME` | Nome do banco de dados/schema | `brasil` |
+| `APP_NAME` | Nome da aplicação no NewRelic | `api-itens` |
+| `NEW_RELIC_LICENSE_KEY` | Chave de licença do NewRelic | - |
+
 ##### CONTATOS
 - Linkedin: (https://www.linkedin.com/in/marcosouzatech/)
 - Youtube: https://www.youtube.com/@maistalkmenosshow

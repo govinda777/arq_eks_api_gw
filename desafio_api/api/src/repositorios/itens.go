@@ -72,10 +72,10 @@ func (repositorio Itens) Buscar(ProductOuNome string) ([]modelos.Item, error) {
 	return itens, nil
 }
 
-// BuscaPorID traz um item do banco de dados
+// BuscarPorID traz um item do banco de dados
 func (repositorio Itens) BuscarPorID(ID uint64) (modelos.Item, error) {
 	linhas, erro := repositorio.db.Query(
-		"select id, Product, Nome, email, criadoEm from itens where id = ? ",
+		"select id, Product, Nome, Categoria, criadoEm from itens where id = ? ",
 		ID,
 	)
 	if erro != nil {
@@ -99,9 +99,10 @@ func (repositorio Itens) BuscarPorID(ID uint64) (modelos.Item, error) {
 	return item, nil
 }
 
+// Atualizar altera as informações de um item no banco de dados
 func (repositorio Itens) Atualizar(ID uint64, item modelos.Item) error {
 	statement, erro := repositorio.db.Prepare(
-		"update itens set Product = ?, Nome = ?, email = ?, where id = ?",
+		"update itens set Product = ?, Nome = ?, Categoria = ? where id = ?",
 	)
 	if erro != nil {
 		return erro
@@ -111,5 +112,20 @@ func (repositorio Itens) Atualizar(ID uint64, item modelos.Item) error {
 	if _, erro = statement.Exec(item.Product, item.Nome, item.Categoria, ID); erro != nil {
 		return erro
 	}
+	return nil
+}
+
+// Deletar exclui as informações de um item no banco de dados
+func (repositorio Itens) Deletar(ID uint64) error {
+	statement, erro := repositorio.db.Prepare("delete from itens where id = ?")
+	if erro != nil {
+		return erro
+	}
+	defer statement.Close()
+
+	if _, erro = statement.Exec(ID); erro != nil {
+		return erro
+	}
+
 	return nil
 }

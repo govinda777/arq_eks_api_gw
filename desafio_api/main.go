@@ -1,6 +1,7 @@
 package main
 
 import (
+	"api/api/src/banco"
 	"api/api/src/config"
 	"api/api/src/router"
 	"fmt"
@@ -25,8 +26,20 @@ func initNewRelic() {
 
 }
 func main() {
-	config.Carregar()
-	fmt.Printf("Escutando na porta %d", config.Porta)
+	if err := config.Carregar(); err != nil {
+		log.Printf("Erro ao carregar configurações: %v", err)
+		// Em ambiente de container/k8s, às vezes as variáveis já estão injetadas sem .env
+	}
+
+	initNewRelic()
+
+	db, err := banco.Conectar()
+	if err != nil {
+		log.Fatalf("Erro ao conectar ao banco de dados: %v", err)
+	}
+	db.Close()
+
+	fmt.Printf("Escutando na porta %d\n", config.Porta)
 	r := router.Gerar()
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Porta), r))
