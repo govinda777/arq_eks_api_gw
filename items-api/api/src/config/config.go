@@ -9,21 +9,21 @@ import (
 )
 
 var (
-	StringConexaoBanco = ""
-	Porta              = 0
+	DatabaseConnectionString = ""
+	Port              = 0
 )
 
-// Carregar vai inicializaar as variaveis de ambiente
-func Carregar() error {
+// Load vai initializes environment variables
+func Load() error {
 	godotenv.Load()
 
-	var erro error
-	Porta, erro = strconv.Atoi(os.Getenv("API_PORT"))
-	if erro != nil {
-		Porta = 9000
+	var err error
+	Port, err = strconv.Atoi(os.Getenv("API_PORT"))
+	if err != nil {
+		Port = 9000
 	}
 
-	StringConexaoBanco = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
+	DatabaseConnectionString = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
 		os.Getenv("DB_USUARIO"),
 		os.Getenv("DB_SENHA"),
 		os.Getenv("DB_URL"),
