@@ -1,112 +1,117 @@
 
-# DESAFIO API ITENS #
+# ITEMS API - PRODUCTION MODEL #
 
 ## 1 - FRAGMENTAÇÃO DE TRÁFEGO
- 
-Para conseguir concluir o primeiro desafio, me dediquei a terminar parte do curso de Golang que estava cursando e colocar meus conhecimentos em prática e nesse processo algumas adaptações foram efetuadas para atender a necessidade do desafio proposto.
 
-**1.1 - API ITENS**
+Esta aplicação foi desenvolvida em Golang seguindo as melhores práticas de arquitetura e implantação em nuvem, servindo como um modelo de referência para APIs de alto desempenho.
 
-- Contruir uma aplicação em Golang que retornasse uma lista de itens
-- Adaptação para a necessidade do desafio
-- Implementação de Logs
-- String de Banco de dados para RDS
-- Criação da Imagem Docker
-- Criação dos arquivos manifestos kubernetes
-  
+**1.1 - API ITEMS**
+
+- Construir uma aplicação em Golang que retorna uma lista de itens de forma eficiente.
+- Implementação de Logs estruturados
+- Integração com RDS (AWS)
+- Dockerização otimizada
+- Manifestos Kubernetes para orquestração
+
 **1.2 - Provisionamento Cluster EKS**
-- Criação e adaptação dos arquivos terraform
-- Utilização de máquinas spot
-- Instalação de Add-Ons ( Kube-Proxy, CoreDNS, CNI-Plugin, EBS CSI Driver)
-- Provisionamento do kubecost
-- Provisionamento do Aplication LoadBalancing
-- Provisionamento do TargetGroup e regras listners ( MLA/MLB/MLC/MLM )
-  
-**1.3 - Criação do Banco de dados RDS**
-- Criação das tabelas
+- Infraestrutura como Código (Terraform)
+- Utilização de instâncias Spot para otimização de custos
+- Instalação de Add-Ons essenciais (Kube-Proxy, CoreDNS, VPC CNI, EBS CSI Driver)
+- Observabilidade de custos com Kubecost
+- Balanceamento de carga com AWS Application Load Balancer (ALB)
+- Regras de roteamento por Header para múltiplos ambientes (MLA/MLB/MLC/MLM)
 
-> Para fins de demonstração foi criado apenas 1 RDS contendo as 4 tabelas porém essa solução não necessáriamente precisa representar um ambiente real, dependendo da utilização é interessante fragmentar a base de dados para evitar problemas de performance. 
+**1.3 - Persistência de Dados**
+- Instância gerenciada RDS MySQL
 
-No primeiro momento já tinha intuito de utilizar AWS como cloud provider e API Internet Gateway para fazer o roteamento de tráfego com base no header, após algumas pesquisas identifiquei que seria necessário utilizar uma função lambda para ler o Header e efetuar o forwarding da requisição para o ambiente desejado.
+> Para fins de demonstração foi utilizado um RDS compartilhado, permitindo a segregação lógica por tabelas ou schemas conforme a necessidade de performance e isolamento.
 
-Por este motivo foi decidido colocar a a lógica da fragmentação `site_id` de origem no header no `ApplicationLoadBalancer, e evitar custos do Lambda, mas como alternativas poderíamos explorar outro Gateway como Kong ou KrakenD, um proxy reverso: nginx ou service mesh istio ou algo similar. 
-
-> Foi provisionado um targetGroup para representar cada ambiente, essa etapa me livrou de configurar ZonaDNS e Ingress de cada aplicação, em um ambiente real seria encaminhado para outro loadbalancer ou endpoint.
+O roteamento de tráfego é realizado de forma inteligente pelo Application Load Balancer com base nos Headers da requisição, eliminando a necessidade de proxies complexos e reduzindo a latência.
 
 Para representar a solução foi desenhado o diagrama de arquitetura:
 
 ![DIAGRAMA DE ARQUITETURA ](https://github.com/marcosouzatech/desafio/blob/main/img/diagrama.png)
 
 
-Podemos efetuar requisições para o ambiente da API Itens:
+Exemplo de requisição para o ambiente da API Items:
 ```
-curl -H "site_id":"MLB" https://0p4ko8ndke.execute-api.us-east-1.amazonaws.com/api/itens
-```
-Obs: todos os ambientes estão ativos, e podem ser acessados pelo endpoint público seguindo seu site_id especifico.
-
-Resposta da Chamada:
-```
-[{"id":1,"Product":"Camiseta","nome":"Brasil 12","Categoria":"Brasil 12","CriadoEm":"2023-07-13T23:44:55Z"},{"id":3,"Product":"Camisa","nome":"Brasil 13","Categoria":"Brasil","CriadoEm":"2023-07-13T23:45:11Z"},{"id":4,"Product":"Camisa1","nome":"Brasil 113","Categoria":"Brasil1","CriadoEm":"2023-07-13T23:45:19Z"},{"id":5,"Product":"Camisa11","nome":"Brasil 1113","Categoria":"Brasil11","CriadoEm":"2023-07-13T23:45:24Z"},{"id":6,"Product":"Camisa111","nome":"Brasil 11113","Categoria":"Brasil111","CriadoEm":"2023-07-13T23:45:31Z"},{"id":7,"Product":"Camisa1111","nome":"Brasil 111113","Categoria":"Brasi1l111","CriadoEm":"2023-07-13T23:45:42Z"}]
-
+curl -H "site_id":"MLB" https://api.prod.example.com/api/items
 ```
 
 ## 2 - LIMITAÇÃO DE TRÁFEGO
 
-Apesar do Api Internet Gateway não funcionar muito bem para validar as regras no header, utilizei API Internet Gateway para expor endpoint público e criar limitação de tráfego com base no desafio.
-  
-A regra limita o tráfego em 15 requisições por segundo e assim consegue limitar o tráfego a 1000 requisições por minuto conforme descrito no desafio. 
+A API conta com mecanismos de Rate Limiting para garantir a disponibilidade e proteção contra abusos.
 
-Ao executar a chamada na api podemos verificar ao atingir o limite recebemos `429 TOO MANY REQUESTS`
-  
+A configuração atual limita o tráfego em 15 requisições por segundo, garantindo conformidade com o limite de 1000 requisições por minuto.
+
+Ao atingir o limite, a API retorna o status `429 TOO MANY REQUESTS`.
+
 ![TESTE DE CARGA POSTMAN](https://github.com/marcosouzatech/desafio/blob/main/img/teste_postman.png)
 
-![TESTE DE CARGA HEY - EXECUÇÃO 1MINUTO](https://github.com/marcosouzatech/desafio/blob/main/img/teste_hey.png)
-  
-## 3 - MONITORAMENTO
+![TESTE DE CARGA HEY](https://github.com/marcosouzatech/desafio/blob/main/img/teste_hey.png)
 
-Para o monitoramento ativo do cluster foi provisionado o NewRelic como principal foco de observabilidade, é possivel verificar métricas de recursos de infraestrutura, traces, logs e auto instrumentação com OpenTelemetry. 
+## 3 - MONITORAMENTO E OBSERVABILIDADE
 
-Criado um dashboard de exemplo do que podemos entender como necessário para monitorar nossos ambientes, além do monitoramento triviais de Recursos (Memória/CPU/REDE) podemos visualizar métricas integradas com CloudWatch e Prometheus. 
+Utilizamos o NewRelic para monitoramento Full-Stack, incluindo:
+- Métricas de Infraestrutura (EKS/Nodes)
+- Tracing Distribuído
+- Agregação de Logs
+- Telemetria com OpenTelemetry
 
-A utilização do NewRelic facilitará ao identificar padrões e alertas que serão criados automaticamente podendo ser notificados em canais de atendimento. 
+Dashboards personalizados permitem visualizar em tempo real o Error Rate, Latência (p99) e consumo de recursos.
 
-Alertas personalizados também são possíveis de se criar, podemos pensar no aumento do Error Rate, tanto do lado do API Gateway ou no NewRelic para buscar um monitoramento ativo.
+[DASHBOARD EXEMPLO - PDF](https://github.com/marcosouzatech/desafio/blob/main/img/dashboard_argentina.pdf)
 
-Maiores integrações com newRelic podem ser efetuadas. 
+## CUSTOS
 
-Como alternativa ao newRelic, podemos utilizar o Dynatrace, Datadog, Elastic Stack entre outras soluções openSource. 
+A gestão de custos é realizada via Kubecost, fornecendo visibilidade granular sobre os gastos do cluster Kubernetes.
 
-[DASHBOARD - ARGENTINA - VERSÃO PDF ](https://github.com/marcosouzatech/desafio/blob/main/img/dashboard_argentina.pdf)
-
-## CUSTOS 
-
-Foi implementado o kubecost para auxiliar no controle dos custos do ambiente, ele trará insigths interessantes para economia e eficiência do ambiente da API de Itens. 
-  
 ![KUBECOST OVERVIEW](https://github.com/marcosouzatech/desafio/blob/main/img/kubecost.png)
 
-## GIT ACTIONS
+## CI/CD - GITHUB ACTIONS
 
-Foi implementado um workflow de exemplo para efetuar build da imagem e publish no repositório dockerhub, não foi adicionado o processo de deploy pois nosso cluster não está exposto url públicas e as não foram provisionados runners self-hosted. 
+Pipeline automatizada para Build e Publish da imagem no DockerHub. O processo de deploy é integrado via GitOps.
 
-### Considerações Finais
-  
-Este challenge foi realmente desafiador, trouxe conteúdo denso de vários aspectos envolvendo infraestrutura, desenvolvimento e operações, com certeza temos vários pontos a melhorar principalmente visando IAC, acredito que consegui demonstrar vários aspectos importantes que foram me solicitados. 
+## Como Rodar o Projeto Localmente
 
-> Não foi levado em conta nenhum modelo padrão de versionamento/gitflow
+### Pré-requisitos
+- Go 1.20 ou superior
+- MySQL
+- Docker (opcional)
 
+### Configuração do Ambiente
+1. Clone o repositório.
+2. Navegue até a pasta `items-api/`.
+3. Copie o arquivo de exemplo de variáveis de ambiente:
+   ```bash
+   cp .env.example .env
+   ```
+4. Edite o arquivo `.env` com as suas credenciais do banco de dados.
 
-#### REFERÊNCIAS
+### Execução
+#### Via Go Local:
+```bash
+cd items-api/
+go run main.go
+```
 
-- Hey- Load to a web application.
-https://github.com/rakyll/hey
-- Base API - Golang
-https://devbook.com.br/curso-golang/
-- APM - NEW RELIC
-https://newrelic.com/pt
-- Kubecost - Monitor and manage Kubernetes spend
-https://github.com/kubecost/cost-analyzer-helm-chart
-- EVIDÊNCIAS DO PRJETO.
-https://github.com/marcosouzatech/desafio/blob/main/img/
+#### Via Docker:
+```bash
+docker build -t items-api .
+docker run -p 9000:9000 --env-file items-api/.env items-api
+```
+
+### Variáveis de Ambiente
+| Variável | Descrição | Valor Padrão |
+|----------|-----------|--------------|
+| `API_PORT` | Porta em que a API irá escutar | `9000` |
+| `DB_USUARIO` | Usuário do banco de dados | - |
+| `DB_SENHA` | Senha do banco de dados | - |
+| `DB_URL` | Host do banco de dados | `localhost` |
+| `DB_PORT` | Porta do banco de dados | `3306` |
+| `DB_NOME` | Nome do banco de dados/schema | `brasil` |
+| `APP_NAME` | Nome da aplicação no NewRelic | `api-items` |
+| `NEW_RELIC_LICENSE_KEY` | Chave de licença do NewRelic | - |
 
 ##### CONTATOS
 - Linkedin: (https://www.linkedin.com/in/marcosouzatech/)

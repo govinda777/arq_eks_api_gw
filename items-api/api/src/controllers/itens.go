@@ -1,10 +1,10 @@
 package controllers
 
 import (
-	"api/api/src/banco"
-	"api/api/src/modelos"
-	"api/api/src/repositorios"
-	"api/api/src/respostas"
+	"github.com/marcosouzatech/items-api/api/src/banco"
+	"github.com/marcosouzatech/items-api/api/src/modelos"
+	"github.com/marcosouzatech/items-api/api/src/repositorios"
+	"github.com/marcosouzatech/items-api/api/src/respostas"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -150,5 +150,25 @@ func AtualizarItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeletarItem(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Deletar um Item"))
+	parametros := mux.Vars(r)
+	itemID, erro := strconv.ParseUint(parametros["itemId"], 10, 64)
+	if erro != nil {
+		respostas.Erro(w, http.StatusBadRequest, erro)
+		return
+	}
+
+	db, erro := banco.Conectar()
+	if erro != nil {
+		respostas.Erro(w, http.StatusInternalServerError, erro)
+		return
+	}
+	defer db.Close()
+
+	repositorio := repositorios.NovoRepositorioDeItens(db)
+	if erro = repositorio.Deletar(itemID); erro != nil {
+		respostas.Erro(w, http.StatusInternalServerError, erro)
+		return
+	}
+
+	respostas.JSON(w, http.StatusNoContent, nil)
 }

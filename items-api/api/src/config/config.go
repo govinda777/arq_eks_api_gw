@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 
@@ -15,13 +14,10 @@ var (
 )
 
 // Carregar vai inicializaar as variaveis de ambiente
-func Carregar() {
+func Carregar() error {
+	godotenv.Load()
+
 	var erro error
-
-	if erro = godotenv.Load(); erro != nil {
-		log.Fatal(erro)
-	}
-
 	Porta, erro = strconv.Atoi(os.Getenv("API_PORT"))
 	if erro != nil {
 		Porta = 9000
@@ -34,4 +30,6 @@ func Carregar() {
 		os.Getenv("DB_PORT"),
 		os.Getenv("DB_NOME"),
 	)
+
+	return nil
 }

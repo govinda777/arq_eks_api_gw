@@ -1,4 +1,4 @@
-module api
+module github.com/marcosouzatech/items-api
 
 go 1.20
 
