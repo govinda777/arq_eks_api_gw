@@ -20,7 +20,7 @@ spec:
         app: mexico
     spec:
       containers:
-      - image: marcosluv/desafio-meli:test
+      - image: items-api:test
         name: mexico
         env:
           - name: APP_NAME
@@ -82,8 +82,8 @@ metadata:
 data:
   APP_NAME: "mexico"
   DB_PORT: "3306"
-  DB_USUARIO: "desafio"
-  DB_URL: "desafio-api.c83ipwcuxs6c.us-east-1.rds.amazonaws.com"
+  DB_USUARIO: "items-prod"
+  DB_URL: "items-api.c83ipwcuxs6c.us-east-1.rds.amazonaws.com"
   DB_NOME: "mexico"
   API_PORT: "8080"
 ---

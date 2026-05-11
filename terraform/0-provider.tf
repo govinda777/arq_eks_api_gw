@@ -12,7 +12,7 @@ provider "aws" {
 }
 
 variable "cluster_name" {
-  default = "desafio"
+  default = "items-api"
 }
 
 variable "cluster_version" {

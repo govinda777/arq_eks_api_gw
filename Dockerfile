@@ -8,11 +8,11 @@ RUN apk add --no-cache git
 WORKDIR /app
 
 # Copiar apenas os arquivos de módulos primeiro para aproveitar o cache das camadas
-COPY desafio_api/go.mod desafio_api/go.sum ./
+COPY items-api/go.mod items-api/go.sum ./
 RUN go mod download
 
 # Copiar o restante do código fonte
-COPY desafio_api/ ./
+COPY items-api/ ./
 
 # Compilar a aplicação
 RUN go build -o main main.go

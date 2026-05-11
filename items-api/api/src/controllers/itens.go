@@ -1,10 +1,10 @@
 package controllers
 
 import (
-	"api/api/src/banco"
-	"api/api/src/modelos"
-	"api/api/src/repositorios"
-	"api/api/src/respostas"
+	"github.com/marcosouzatech/items-api/api/src/banco"
+	"github.com/marcosouzatech/items-api/api/src/modelos"
+	"github.com/marcosouzatech/items-api/api/src/repositorios"
+	"github.com/marcosouzatech/items-api/api/src/respostas"
 	"encoding/json"
 	"io/ioutil"
 	"log"

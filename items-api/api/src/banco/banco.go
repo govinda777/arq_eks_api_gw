@@ -1,7 +1,7 @@
 package banco
 
 import (
-	"api/api/src/config"
+	"github.com/marcosouzatech/items-api/api/src/config"
 	"database/sql"
 
 	_ "github.com/go-sql-driver/mysql"

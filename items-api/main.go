@@ -1,9 +1,9 @@
 package main
 
 import (
-	"api/api/src/banco"
-	"api/api/src/config"
-	"api/api/src/router"
+	"github.com/marcosouzatech/items-api/api/src/banco"
+	"github.com/marcosouzatech/items-api/api/src/config"
+	"github.com/marcosouzatech/items-api/api/src/router"
 	"fmt"
 	"log"
 	"net/http"

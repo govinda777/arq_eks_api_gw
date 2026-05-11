@@ -1,7 +1,7 @@
 package repositorios
 
 import (
-	"api/api/src/modelos"
+	"github.com/marcosouzatech/items-api/api/src/modelos"
 	"database/sql"
 	"fmt"
 )

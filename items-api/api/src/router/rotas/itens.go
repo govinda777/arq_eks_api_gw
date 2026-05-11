@@ -1,7 +1,7 @@
 package rotas
 
 import (
-	"api/api/src/controllers"
+	"github.com/marcosouzatech/items-api/api/src/controllers"
 	"net/http"
 )
 
@@ -13,31 +13,31 @@ var rotasItens = []Rota{
 		RequerAutenticacao: false,
 	},
 	{
-		URI:                "/itens",
+		URI:                "/items",
 		Metodo:             http.MethodPost,
 		Funcao:             controllers.CriarItem,
 		RequerAutenticacao: false,
 	},
 	{
-		URI:                "/itens",
+		URI:                "/items",
 		Metodo:             http.MethodGet,
 		Funcao:             controllers.BuscarItens,
 		RequerAutenticacao: false,
 	},
 	{
-		URI:                "/itens/{itemId}",
+		URI:                "/items/{itemId}",
 		Metodo:             http.MethodGet,
 		Funcao:             controllers.BuscarItem,
 		RequerAutenticacao: false,
 	},
 	{
-		URI:                "/itens/{itemId}",
+		URI:                "/items/{itemId}",
 		Metodo:             http.MethodPut,
 		Funcao:             controllers.AtualizarItem,
 		RequerAutenticacao: false,
 	},
 	{
-		URI:                "/itens/{itemId}",
+		URI:                "/items/{itemId}",
 		Metodo:             http.MethodDelete,
 		Funcao:             controllers.DeletarItem,
 		RequerAutenticacao: false,
