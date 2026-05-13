@@ -1,0 +1,96 @@
+name: Deploy End-to-End
+
+# 1. Trigger: Execução apenas em 'push' na branch main
+on:
+  push:
+    branches:
+      - main
+
+# Permissões necessárias para usar OIDC com AWS
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy Completo (Infra e K8s)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v3
+
+      # 2. Segurança: Use OIDC ou Secrets para autenticação na AWS
+      # Configuração utilizando OIDC (Recomendado para maior segurança)
+      - name: Configurar credenciais da AWS
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          # role-to-assume: arn:aws:iam::123456789012:role/SuaRoleOIDC
+          # Fallback utilizando Secrets caso OIDC não esteja configurado:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      # 3. Infraestrutura: Implemente etapas de terraform init, plan e apply
+      - name: Terraform Init
+        working-directory: ./terraform
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: ./terraform
+        run: terraform plan
+
+      - name: Terraform Apply
+        working-directory: ./terraform
+        run: terraform apply -auto-approve
+
+      # 4. Kubernetes: Configurar o kubeconfig para o cluster EKS
+      # O cluster_name padrão no Terraform é 'items-api'
+      - name: Configurar Kubeconfig
+        run: aws eks update-kubeconfig --name items-api --region us-east-1
+
+      # 4. Kubernetes: Aplicar os manifestos da pasta /k8s
+      - name: Deploy dos Manifestos K8s
+        run: kubectl apply -f ./k8s/
+
+      # 5. Gateway: Validar se o endpoint do API Gateway está saudável via curl
+      - name: Validar Endpoint do API Gateway
+        run: |
+          echo "Obtendo o ID da API do API Gateway..."
+          # Busca o ID da API Gateway chamada 'main'
+          API_ID=$(aws apigatewayv2 get-apis --query "Items[?Name=='main'].ApiId" --output text)
+
+          if [ -z "$API_ID" ] || [ "$API_ID" == "None" ]; then
+            echo "API Gateway não encontrada. O deploy da infraestrutura falhou ou a API não possui o nome 'main'."
+            exit 1
+          fi
+
+          # Montar a URL do endpoint considerando o stage 'dev'
+          ENDPOINT="https://${API_ID}.execute-api.us-east-1.amazonaws.com/dev/"
+          echo "Endpoint encontrado: $ENDPOINT"
+
+          echo "Testando a saúde do endpoint via curl..."
+          # Realiza a chamada extraindo apenas o código HTTP
+          STATUS_CODE=$(curl -o /dev/null -s -w "%{http_code}\n" "$ENDPOINT")
+          echo "Status Code Retornado: $STATUS_CODE"
+
+          # Valida se a resposta HTTP é saudável (< 400)
+          if [ "$STATUS_CODE" -ge 400 ]; then
+            echo "Aviso/Erro: O endpoint retornou erro $STATUS_CODE indicando falta de saúde no serviço!"
+            exit 1
+          else
+            echo "Sucesso: O endpoint está saudável!"
+          fi
+
+      # 6. Notificação: Adicionar um step final para reportar o status do deploy
+      - name: Notificar Status do Deploy
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Deploy Finalizado: A infraestrutura e a aplicação foram publicadas com sucesso!"
+          else
+            echo "❌ Falha no Deploy: Houve um erro em alguma das etapas anteriores. Verifique os logs para mais detalhes."
+          fi
